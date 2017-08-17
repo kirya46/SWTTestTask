@@ -4,17 +4,11 @@ import java.io.File;
 import java.util.ArrayList;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ControlAdapter;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -25,11 +19,10 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
-
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Text;
 
 public class Main {
 
@@ -44,7 +37,7 @@ public class Main {
 		FillLayout layout = new FillLayout();
 		shell.setLayout(layout);
 
-		// TODO add some widgets to the Shell
+		// Add some widgets to the Shell
 		// Shell can be used as container
 		// initLable(shell);
 		// initText(shell, display);
@@ -174,7 +167,8 @@ public class Main {
 		composite.setLayout(layout);
 		composite.setBackground(display.getSystemColor(SWT.COLOR_CYAN));
 
-		
+		// TODO: test different composites with Labels and onMouseListeners on some Labels
+	
 		final Composite mainComposite = new Composite(composite, SWT.NONE);
 	    mainComposite.setLayout(new GridLayout(1, false));
 	    mainComposite.setLayoutData(new GridData(SWT.WRAP, SWT.WRAP, true, true, 1, 1));
