@@ -1,13 +1,22 @@
 package common;
 
+import java.io.File;
+import java.util.ArrayList;
+
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -30,8 +39,8 @@ public class Main {
 
 		// TODO add some widgets to the Shell
 		// Shell can be used as container
-		initLable(shell);
-		initText(shell, display);
+//		initLable(shell);
+//		initText(shell, display);
 
 		Table table = initListViewer(shell);
 		initButton(shell, table);
@@ -64,17 +73,34 @@ public class Main {
 		label.pack();
 	}
 
-	private static void initButton(Shell shell,final Table table) {
+	private static void initButton(Shell shell, final Table table) {
 		Button button = new Button(shell, SWT.PUSH);
 
 		// register listener for the selection event
 		button.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				System.out.println("Button pressed");
-				TableItem item = new TableItem(table, SWT.NONE);
-				item.setText(0, "delete");
-				item.setText(1, System.currentTimeMillis()+"");
+//				System.out.println("Button pressed");
+//				TableItem item = new TableItem(table, SWT.NONE);
+//				item.setText(0, "delete");
+//				item.setText(1, System.currentTimeMillis() + "");
+				
+				 // Ask the user which files to upload
+				  FileDialog dialog =
+				      new FileDialog(Display.getCurrent().getActiveShell(), SWT.OPEN
+				          | SWT.MULTI);
+				  dialog.setText("Select the local files to upload");
+				  dialog.open();
+
+				  ArrayList<File> files = new ArrayList<File>();
+				  for (String fname : dialog.getFileNames())
+				    files.add(new File(dialog.getFilterPath() + File.separator + fname));
+
+//				  // TODO enable upload command only when selection is exactly one folder
+//				  List<DFSFolder> folders = filterSelection(DFSFolder.class, selection);
+//				  if (folders.size() >= 1)
+//				    uploadToDFS(folders.get(0), files);
+//				}
 			}
 		});
 
@@ -86,7 +112,7 @@ public class Main {
 	}
 
 	private static Table initListViewer(Shell shell) {
-		Table table = new Table(shell, SWT.MULTI | SWT.BORDER
+		final Table table = new Table(shell, SWT.MULTI | SWT.BORDER
 				| SWT.FULL_SELECTION);
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
@@ -111,81 +137,22 @@ public class Main {
 		for (int i = 0; i < titles.length; i++) {
 			table.getColumn(i).pack();
 		}
+			
+		//Listener of all table
+		table.addListener(SWT.DefaultSelection, new Listener() {
+			public void handleEvent(Event e) {
+				String string = "";
+				TableItem[] selection = table.getSelection();
+				
+				for(TableItem tableItem :selection){
+					System.out.println("Remove table item: " + tableItem.getText(1));
+					tableItem.dispose();
+				}
+			}
+		});
+
 		table.pack();
 
 		return table;
 	}
-
-	// private static void initListViewer(Shell shell) {
-	// ListViewer listViewer = new ListViewer(shell);
-	// Vector images = new Vector();
-	// images.add(new ListObject("some uri"));
-	// images.add(new ListObject("some uri #2"));
-	//
-	//
-	// listViewer.setContentProvider(new IStructuredContentProvider() {
-	// public Object[] getElements(Object inputElement) {
-	// Vector v = (Vector) inputElement;
-	// return v.toArray();
-	// }
-	//
-	// public void dispose() {
-	// System.out.println("Disposing ...");
-	// }
-	//
-	// public void inputChanged(Viewer viewer, Object oldInput,
-	// Object newInput) {
-	// System.out.println("Input changed: old=" + oldInput + ", new="
-	// + newInput);
-	// }
-	// });
-	//
-	// // listViewer.setContentProvider(new ArrayContentProvider());
-	//
-	// listViewer.setInput(images);
-	//
-	// listViewer.setLabelProvider(new LabelProvider() {
-	// public Image getImage(Object element) {
-	// return null;
-	// }
-	//
-	// public String getText(Object element) {
-	// return ((Language) element).genre;
-	// }
-	// });
-	//
-	// listViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-	// public void selectionChanged(SelectionChangedEvent event) {
-	// IStructuredSelection selection = (IStructuredSelection) event
-	// .getSelection();
-	// StringBuffer sb = new StringBuffer("Selection - ");
-	// sb.append("tatal " + selection.size() + " items selected: ");
-	// for (Iterator iterator = selection.iterator(); iterator
-	// .hasNext();) {
-	// sb.append(iterator.next() + ", ");
-	// }
-	// System.out.println(sb);
-	// }
-	// });
-	//
-	// listViewer.addFilter(new ViewerFilter() {
-	// public boolean select(Viewer viewer, Object parentElement,
-	// Object element) {
-	//
-	// if (((Language) element).isObjectOriented)
-	// return true;
-	// else
-	// return false;
-	// }
-	// });
-	//
-	// listViewer.setSorter(new ViewerSorter() {
-	// public int compare(Viewer viewer, Object e1, Object e2) {
-	// return ((Language) e1).genre.compareTo(((Language) e2).genre);
-	// }
-	//
-	// });
-	//
-	// }
-
 }
