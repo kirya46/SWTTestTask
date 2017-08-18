@@ -19,8 +19,12 @@ public class MyCanvas extends Canvas {
 
 			@Override
 			public void paintControl(PaintEvent e) {
-					Log.d(TAG, "Redraw");			
+					Log.d(TAG, "Redraw");	
+					//TODO: redraw all existing images
 			}});
+		
+		
+		//TODO: save arguments to local variables
 	}
 	
 //	 WorldWidget() {
