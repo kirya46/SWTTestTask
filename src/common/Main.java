@@ -1,12 +1,15 @@
 package common;
 
+import common.util.ImageUtil;
+import common.util.ImageWraper;
+import common.widgets.ImageTable;
+import common.widgets.MyCanvas;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
@@ -15,7 +18,6 @@ import javax.activation.MimetypesFileTypeMap;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
-import common.ImageUtil;
 
 public class Main {
     private static Widget mouseControl = null;
@@ -38,15 +40,9 @@ public class Main {
         shell.setLayout(new GridLayout(2, false));
         shell.setText("SWT test task");
 
-        //TODO: add composite for left side and test put Labels to this composite
-        GridLayout leftLayout = new GridLayout(1,false);
-        Composite leftComposite = new Composite(shell, SWT.NONE);
-        leftComposite.setLayout(leftLayout);
-        leftComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-        //TODO: add composite for left side and test put Labels to this composite
 
         // Add canvas to shell
-        MyCanvas canvas = new MyCanvas(leftComposite, SWT.NONE, new ArrayList<ImageWraper>());
+        MyCanvas canvas = new MyCanvas(shell, SWT.NONE, new ArrayList<ImageWraper>());
         canvas.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
         canvas.setBackground(display.getSystemColor(SWT.COLOR_DARK_GRAY));
 //        canvas.setVisible(false);
@@ -71,7 +67,7 @@ public class Main {
         table.setLayoutData(tableData);
         table.pack();
 
-        initButton(rightComp, leftComposite,display, table, canvas);
+        initButton(rightComp,display, table, canvas);
 
         // start shell
         shell.open();
@@ -83,7 +79,7 @@ public class Main {
         display.dispose();
     }
 
-    private static void initButton(Composite rightComposite,final Composite leftComposite, final Display display,
+    private static void initButton(Composite rightComposite,final Display display,
                                    final Table table, final MyCanvas canvas) {
 
         // ClassLoader classLoader = Main.class.getClassLoader();

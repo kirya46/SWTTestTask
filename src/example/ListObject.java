@@ -1,4 +1,4 @@
-package common;
+package example;
 
 public class ListObject {
 	private String imageURI;

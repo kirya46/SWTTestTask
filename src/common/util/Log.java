@@ -1,4 +1,4 @@
-package common;
+package common.util;
 
 public class Log {
 	public static void d(String TAG, String message){

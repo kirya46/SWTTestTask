@@ -1,5 +1,6 @@
-package common;
+package common.widgets;
 
+import common.util.ImageWraper;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Table;

@@ -1,4 +1,4 @@
-package common;
+package common.util;
 
 import org.eclipse.swt.graphics.Image;
 
