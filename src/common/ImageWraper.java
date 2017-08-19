@@ -6,6 +6,7 @@ public class ImageWraper {
 	
 	private Image image;
 	private int x,y;
+	private boolean selected = false;
 	
 	public ImageWraper(Image image,int x,int y){
 		this.image = image;
@@ -37,8 +38,21 @@ public class ImageWraper {
 		this.y = y;
 	}
 
+	public boolean isSelected() {
+		return selected;
+	}
+
+	public void setSelected(boolean selected) {
+		this.selected = selected;
+	}
+
 	@Override
 	public String toString() {
-		return "ImageWraper [image=" + image + ", x=" + x + ", y=" + y + "]";
+		return "ImageWraper{" +
+				"image=" + image +
+				", x=" + x +
+				", y=" + y +
+				", selected=" + selected +
+				'}';
 	}
 }

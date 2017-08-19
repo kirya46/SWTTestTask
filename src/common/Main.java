@@ -15,12 +15,22 @@ import javax.activation.MimetypesFileTypeMap;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
+import common.ImageUtil;
 
 public class Main {
+    private static Widget mouseControl = null;
+
 
     public static void main(String[] args) {
 
         Display display = new Display();
+            /* Overall, keep track of the Widget the mouse is moving over */
+        display.addFilter(SWT.MouseMove, new Listener() {
+            @Override
+            public void handleEvent(Event e) {
+                mouseControl = e.widget;
+            }
+        });
 
         // Set shell layout
         Shell shell = new Shell(display);
@@ -39,6 +49,7 @@ public class Main {
         MyCanvas canvas = new MyCanvas(leftComposite, SWT.NONE, new ArrayList<ImageWraper>());
         canvas.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
         canvas.setBackground(display.getSystemColor(SWT.COLOR_DARK_GRAY));
+//        canvas.setVisible(false);
 
 
         // add right panel composite
@@ -60,7 +71,7 @@ public class Main {
         table.setLayoutData(tableData);
         table.pack();
 
-        initButton(rightComp, display, table, canvas);
+        initButton(rightComp, leftComposite,display, table, canvas);
 
         // start shell
         shell.open();
@@ -72,19 +83,14 @@ public class Main {
         display.dispose();
     }
 
-    private static FormAttachment FormAttachment(int i, int j) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    private static void initButton(Composite shell, final Display display,
+    private static void initButton(Composite rightComposite,final Composite leftComposite, final Display display,
                                    final Table table, final MyCanvas canvas) {
 
         // ClassLoader classLoader = Main.class.getClassLoader();
         // final File deleteIconFile = new File(classLoader.getResource(
         // "delete_icon.png").getFile());
 
-        Button button = new Button(shell, SWT.PUSH);
+        Button button = new Button(rightComposite, SWT.PUSH);
         GridData gridData = new GridData();
         gridData.horizontalAlignment = SWT.CENTER;
         gridData.verticalAlignment = SWT.BOTTOM;
@@ -139,16 +145,46 @@ public class Main {
                     item.setImage(1, image);
 
                     // add to main image container
-                    int x = new Random().nextInt();
-                    int y = new Random().nextInt();
                     Rectangle rectangle = canvas.getBounds();
-
-                    x = new Random().nextInt(rectangle.width);
-                    y = new Random().nextInt(rectangle.height);
+                    int x = new Random().nextInt(rectangle.width);
+                    int y = new Random().nextInt(rectangle.height);
 
                     ImageWraper wraper = new ImageWraper(image, x, y);
                     canvas.redrawWithNewImage(wraper);
 
+
+//                    final Label label = new Label(leftComposite, SWT.WRAP);
+//                    label.setImage(wraper.getImage());
+//
+//                    final Point[] offset = new Point[1];
+//                    Listener listener = new Listener() {
+//                        public void handleEvent(Event event) {
+//                            switch (event.type) {
+//                                case SWT.MouseDown:
+//                                    Log.d("Main", "MouseDown");
+//                                    Rectangle rect = leftComposite.getBounds();
+//                                    if (rect.contains(event.x, event.y)) {
+//                                        Point pt1 = label.toDisplay(0, 0);
+//                                        Point pt2 = label.toDisplay(event.x, event.y);
+//                                        offset[0] = new Point(pt2.x - pt1.x, pt2.y - pt1.y);
+//                                    }
+//                                    break;
+//                                case SWT.MouseMove:
+//                                    if (offset[0] != null) {
+//                                        Point pt = offset[0];
+//                                        label.setLocation(event.x - pt.x, event.y - pt.y);
+//                                    }
+//                                    break;
+//                                case SWT.MouseUp:
+//                                    offset[0] = null;
+//                                    break;
+//                            }
+//                        }
+//                    };
+//
+//                    label.addListener(SWT.MouseDown, listener);
+//                    label.addListener(SWT.MouseUp, listener);
+//                    label.addListener(SWT.MouseMove, listener);
                 }
 
             }
