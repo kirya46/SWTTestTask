@@ -12,41 +12,59 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.omg.CORBA.PUBLIC_MEMBER;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class MyCanvas extends Canvas implements Listener {
 
     private static final String TAG = MyCanvas.class.getSimpleName();
 
+    /**
+     * Set true when any imagas on canvas is selected.
+     */
     private static boolean selected = false;
 
+
+    /**
+     * Default width of images which draw on this canvas.
+     */
+    public static final int DEFAULT_IMAGE_WIDTH = 200;
+
+    /**
+     * Default height of images which draw on this canvas.
+     */
+    public static final int DEFAULT_IMAGE_HEIGHT = 150;
+
+    /**
+     * List of images for draw on canvas.
+     */
     private ArrayList<ImageWraper> wrapers;
 
-    public MyCanvas(Composite parent, int style, ArrayList<ImageWraper> images) {
+    public MyCanvas(Composite parent, int style) {
         super(parent, style);
+        this.wrapers = new ArrayList<ImageWraper>();
+
+
+        //init paintListener
         this.addPaintListener(new PaintListener() {
 
 
             @Override
             public void paintControl(PaintEvent e) {
 
-                Log.d(TAG, "redraw canvas");
-
                 GC gc = e.gc;
 
-                for (ImageWraper wraper : getWrapers()){
-
+                //draw each image
+                for (ImageWraper wraper : getWrapers()) {
                     gc.drawImage(wraper.getImage(), wraper.getX(), wraper.getY());
-                    Log.d(TAG, "Draw: " + wraper.toString());
                 }
 
             }
         });
 
-
-        this.wrapers = images;
-
+        //set listeners to mouse events
         this.addListener(SWT.MouseEnter, this);
         this.addListener(SWT.MouseDown, this);
         this.addListener(SWT.MouseMove, this);
@@ -67,8 +85,16 @@ public class MyCanvas extends Canvas implements Listener {
     }
 
 
-    public void removeImage() {
-
+    public void removeImage(ImageWraper imageWraper) {
+        final Iterator<ImageWraper> iterator = this.getWrapers().iterator();
+        while (iterator.hasNext()) {
+            final ImageWraper next = iterator.next();
+            if (next.getId() == imageWraper.getId()) {
+                iterator.remove();
+                this.redraw();
+                return;
+            }
+        }
     }
 
 
@@ -77,21 +103,29 @@ public class MyCanvas extends Canvas implements Listener {
 
         switch (event.type) {
             case SWT.MouseEnter:
-				Log.d(TAG, "MouseEnter");
+//				Log.d(TAG, "MouseEnter");
                 break;
 
             case SWT.MouseDown:
-				Log.d(TAG, "MouseDown");
+//				Log.d(TAG, "MouseDown");
 
                 for (ImageWraper wraper : getWrapers()) {
+
                     final ImageData imageData = wraper.getImage().getImageData();
-                    Rectangle rectangle = new Rectangle(wraper.getX(),wraper.getY(),imageData.width,imageData.height);
-                    Log.d(TAG, rectangle.toString() + " : " + event.x + "/"+event.y);
+                    Rectangle rectangle = new Rectangle(wraper.getX(), wraper.getY(), imageData.width, imageData.height);
+
+                    //choose only images in this coordinates
                     if (rectangle.contains(event.x, event.y)) {
 
-                        wraper.setSelected(true);
-                        selected = true;
+                        /*
+                        NOTE: Select image if it not selected and unselect if it selected already.
+                         */
+                        wraper.setSelected(!wraper.isSelected());
+                        selected = wraper.isSelected();
+                        return;
                     }
+
+
                 }
                 break;
 
@@ -104,6 +138,7 @@ public class MyCanvas extends Canvas implements Listener {
                             wraper.setX(event.x);
                             wraper.setY(event.y);
                             MyCanvas.this.redraw();
+                            return;
                         }
                     }
 
@@ -112,7 +147,7 @@ public class MyCanvas extends Canvas implements Listener {
                 break;
 
             case SWT.MouseUp:
-				Log.d(TAG, "MouseUp");
+//				Log.d(TAG, "MouseUp");
                 selected = false;
                 for (ImageWraper wraper : getWrapers()) {
                     if (wraper.isSelected()) {
@@ -124,7 +159,7 @@ public class MyCanvas extends Canvas implements Listener {
                 }
                 break;
             case SWT.MouseExit:
-				Log.d(TAG, "MouseExit");
+//				Log.d(TAG, "MouseExit");
                 selected = false;
                 for (ImageWraper wraper : getWrapers()) {
                     if (wraper.isSelected()) {
@@ -140,27 +175,3 @@ public class MyCanvas extends Canvas implements Listener {
         }
     }
 }
-
-
-//WorldWidget() {
-//addPaintListener(new PaintListener() {
-//    @Override
-//public void paintControl(PaintEvent e) {
-//        WorldWidget.this.paintControl(e);
-//    }
-//});
-//}
-//
-//protected void paintControl(PaintEvent e) {
-//GC gc = e.gc;
-//for (short y = 0; y < world.getHeight(); y++) {
-//    for (short x = 0; x < world.getWidth(); x++) {
-//        final ITile tile = world.getTile(x, y);
-//        final Image image = ImageCache.getImage(tile);
-//        gc.drawImage(image, x * tileSize, y * tileSize);
-//    }
-//}
-//
-//// Here is used a similar loop, to draw world objects
-//}
-//

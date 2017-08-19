@@ -2,19 +2,29 @@ package common.util;
 
 import org.eclipse.swt.graphics.Image;
 
+import java.util.Random;
+
 public class ImageWraper {
-	
+
+	private int id;
 	private Image image;
+	private Image preview;
 	private int x,y;
 	private boolean selected = false;
-	
-	public ImageWraper(Image image,int x,int y){
+	private String fileName;
+	private String filePath;
+
+	public ImageWraper(Image image, Image preview, int x, int y, String fileName, String filePath) {
+		this.id = new Random().nextInt(Integer.MAX_VALUE);
 		this.image = image;
+		this.preview = preview;
 		this.x = x;
 		this.y = y;
+		this.fileName = fileName;
+		this.filePath = filePath;
 	}
 
-	public org.eclipse.swt.graphics.Image getImage() {
+	public Image getImage() {
 		return image;
 	}
 
@@ -46,13 +56,60 @@ public class ImageWraper {
 		this.selected = selected;
 	}
 
+	public int getId() {
+		return id;
+	}
+
+	public Image getPreview() {
+		return preview;
+	}
+
+	public void setPreview(Image preview) {
+		this.preview = preview;
+	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
+	public String getFilePath() {
+		return filePath;
+	}
+
+	public void setFilePath(String filePath) {
+		this.filePath = filePath;
+	}
+
 	@Override
 	public String toString() {
 		return "ImageWraper{" +
-				"image=" + image +
+				"id=" + id +
+				", image=" + image +
+				", preview=" + preview +
 				", x=" + x +
 				", y=" + y +
 				", selected=" + selected +
+				", fileName='" + fileName + '\'' +
+				", filePath='" + filePath + '\'' +
 				'}';
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		ImageWraper that = (ImageWraper) o;
+
+		return id == that.id;
+	}
+
+	@Override
+	public int hashCode() {
+		return id;
 	}
 }
