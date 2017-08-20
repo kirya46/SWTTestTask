@@ -4,7 +4,6 @@ import common.util.ImageUtil;
 import common.util.ImageWrapper;
 import common.widgets.ImageCanvas;
 import common.widgets.ImageTable;
-
 import common.widgets.SelectButton;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
@@ -20,34 +19,23 @@ import java.util.Random;
 public class Main {
 
     public static final String TAG = Main.class.getSimpleName();
-    private static Widget mouseControl = null;
-
 
     public static void main(String[] args) {
 
         final Display display = new Display();
 
-        /* Overall, keep track of the Widget the mouse is moving over */
-        display.addFilter(SWT.MouseMove, new Listener() {
-            @Override
-            public void handleEvent(Event e) {
-                mouseControl = e.widget;
-            }
-        });
-
-        // Set shell layout
+        //Init Shell with GridLayout
         final Shell shell = new Shell(display);
         shell.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
         shell.setLayout(new GridLayout(2, false));
         shell.setText("SWT test task");
-
 
         // Add canvas to shell
         final ImageCanvas canvas = new ImageCanvas(shell, SWT.NONE);
         canvas.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
         canvas.setBackground(display.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW));
 
-        // add right panel composite
+        // add right panel composite for Table and Button
         GridLayout rightLayout = new GridLayout();
         final Composite rightComp = new Composite(shell, SWT.NONE);
         rightComp.setLayout(rightLayout);
@@ -75,25 +63,31 @@ public class Main {
                     }
                 });
 
-        //add image select listener to canvas
-        canvas.addCanvasImageListener(
-                new ImageCanvas.OnCanvasImageListener() {
-                    @Override
-                    public void onCanvasSelected(ImageWrapper wrapper) {
-                        table.select(wrapper);
-                    }
-
-                    @Override
-                    public void onCanvasDeselect(ImageWrapper wrapper) {
-                        table.deselect(wrapper);
-                    }
-                });
-
         GridData tableData = new GridData(SWT.WRAP, SWT.FILL, true, true);
         tableData.horizontalAlignment = SWT.CENTER;
         tableData.minimumWidth = 150;
         table.setLayoutData(tableData);
         table.pack();
+
+
+        //add image select listener to canvas
+        canvas.addCanvasImageListener(
+                new ImageCanvas.OnCanvasImageListener() {
+                    @Override
+                    public void onCanvasSelected(ImageWrapper wrapper) {
+                        //when one of any images select on Canvas
+                        //select the same image in Table
+                        table.select(wrapper);
+                    }
+
+                    @Override
+                    public void onCanvasDeselect(ImageWrapper wrapper) {
+                        //when one of any images deselect on Canvas
+                        //deselect the same image in Table
+                        table.deselect(wrapper);
+                    }
+                });
+
 
 
         //create button for call FileDialog for select images
@@ -115,13 +109,15 @@ public class Main {
                             sourceImage = new Image(display, file.getPath());
                             Image canvasImage = ImageUtil.scale(sourceImage, ImageCanvas.DEFAULT_IMAGE_WIDTH, ImageCanvas.DEFAULT_IMAGE_HEIGHT);
 
-                            //generate random coordinates
+                            //generate random coordinates on Canvas for this image
                             Rectangle rectangle = canvas.getBounds();
-                            int randomX = new Random().nextInt(rectangle.width);
-                            int randomY = new Random().nextInt(rectangle.height);
+                            int randomX = new Random().nextInt(rectangle.width - ImageCanvas.DEFAULT_IMAGE_WIDTH);
+                            int randomY = new Random().nextInt(rectangle.height - ImageCanvas.DEFAULT_IMAGE_HEIGHT);
 
+                            //create image wrapper
                             ImageWrapper wraper = new ImageWrapper(canvasImage, preview, randomX, randomY, name, file.getPath());
 
+                            //put wrapper to Table and Canvas views
                             table.addImage(wraper);
                             canvas.addImage(wraper);
                         }
@@ -132,8 +128,7 @@ public class Main {
 
                         if (files == null || files.size() == 0) return;
 
-                        MessageBox dialog =
-                                new MessageBox(shell, SWT.ICON_WARNING | SWT.OK) /*SWT>CANCEL*/;
+                        MessageBox dialog = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK) /*SWT>CANCEL*/;
                         dialog.setText("Warning");
                         dialog.setMessage("Some files were not added.");
 
@@ -149,6 +144,17 @@ public class Main {
         button.setLayoutData(buttonData);
         button.setText("Choose image");
         button.pack();
+
+
+        //set location for shell in the center of the screen
+        Monitor primary = display.getPrimaryMonitor();
+        Rectangle bounds = primary.getBounds();
+        Rectangle rect = shell.getBounds();
+
+        int x = bounds.x + (bounds.width - rect.width) / 2;
+        int y = bounds.y + (bounds.height - rect.height) / 2;
+
+        shell.setLocation(x, y);
 
 
         // start shell

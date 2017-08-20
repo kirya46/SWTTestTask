@@ -1,13 +1,13 @@
 package common.widgets;
 
 
-import common.util.ImageUtil;
 import common.util.ImageWrapper;
-import common.util.Log;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.*;
 
 import java.util.ArrayList;
@@ -38,19 +38,41 @@ public class ImageCanvas extends Canvas implements Listener {
     /**
      * List of images for draw on canvas.
      */
-    private ArrayList<ImageWrapper> wrapers;
+    private ArrayList<ImageWrapper> wrappers;
 
+    /**
+     * List of {@link ImageCanvas} events listeners.
+     */
+    private ArrayList<OnCanvasImageListener> listeners;
 
-    private OnCanvasImageListener callback;
+    /**
+     * Different between image coordinates and position of mouse cursor on destination image by oX.
+     * when user produce {@link SWT#MouseDown} event
+     */
+    final int[] diffX = new int[1];
 
+    /**
+     * Different between image coordinates and position of mouse cursor on destination image by oY.
+     * when user produce {@link SWT#MouseDown} event
+     */
+    final int[] diffY = new int[1];
+
+    /**
+     * Callback interface for send events to outside.
+     */
     public interface OnCanvasImageListener {
         void onCanvasSelected(ImageWrapper wraper);
+
         void onCanvasDeselect(ImageWrapper wraper);
     }
 
+    /**
+     * Default constructor.
+     */
     public ImageCanvas(final Composite parent, int style) {
         super(parent, style);
-        this.wrapers = new ArrayList<ImageWrapper>();
+        this.wrappers = new ArrayList<ImageWrapper>();
+        this.listeners = new ArrayList<OnCanvasImageListener>();
 
         //init paintListener
         this.addPaintListener(new PaintListener() {
@@ -59,9 +81,9 @@ public class ImageCanvas extends Canvas implements Listener {
             public void paintControl(PaintEvent e) {
 
                 final GC gc = e.gc;
-                
+
                 //draw each image
-                for (ImageWrapper wraper : getWrapers()) {
+                for (ImageWrapper wraper : getWrappers()) {
                     gc.drawImage(wraper.getImage(), wraper.getX(), wraper.getY());
                 }
             }
@@ -71,32 +93,50 @@ public class ImageCanvas extends Canvas implements Listener {
         this.addListener(SWT.MouseEnter, this);
         this.addListener(SWT.MouseDown, this);
         this.addListener(SWT.MouseMove, this);
+        this.addListener(SWT.MouseUp, this);
         this.addListener(SWT.MouseExit, this);
     }
 
-    public void addCanvasImageListener(OnCanvasImageListener callback){
-        this.callback = callback;
+    /**
+     * Add canvas event listener.
+     *
+     * @param callback - destination listener.
+     */
+    public void addCanvasImageListener(OnCanvasImageListener callback) {
+        if (!this.listeners.contains(callback)) this.listeners.add(callback);
     }
 
+    /**
+     * Add new {@link ImageWrapper} to {@link ImageCanvas#wrappers}
+     * and redraw canvas with new image.
+     *
+     * @param wraper - new wrapper.
+     */
     public void addImage(ImageWrapper wraper) {
-        this.getWrapers().add(wraper);
+        this.getWrappers().add(wraper);
         this.redraw();
     }
 
-    public ArrayList<ImageWrapper> getWrapers() {
-        return wrapers;
+    /**
+     * Get all {@link ImageWrapper}.
+     *
+     * @return - list of all {@link ImageWrapper} of this canvas.
+     */
+    public ArrayList<ImageWrapper> getWrappers() {
+        return wrappers;
     }
 
-    public void setWrapers(ArrayList<ImageWrapper> wrapers) {
-        this.wrapers = wrapers;
-    }
-
-
-    public void removeImage(ImageWrapper ImageWrapper) {
-        final Iterator<ImageWrapper> iterator = this.getWrapers().iterator();
+    /**
+     * Remove {@param imageWrapper} from {@link ImageCanvas#wrappers}
+     * and redraw canvas without removed image.
+     *
+     * @param imageWrapper
+     */
+    public void removeImage(ImageWrapper imageWrapper) {
+        final Iterator<ImageWrapper> iterator = this.getWrappers().iterator();
         while (iterator.hasNext()) {
             final ImageWrapper next = iterator.next();
-            if (next.getId() == ImageWrapper.getId()) {
+            if (next.getId() == imageWrapper.getId()) {
                 iterator.remove();
                 this.redraw();
                 return;
@@ -104,14 +144,19 @@ public class ImageCanvas extends Canvas implements Listener {
         }
     }
 
-    public void selectImage(final ImageWrapper wraper){
+
+    /**
+     * Move selected image to foreground.
+     *
+     * @param wraper - selected image.
+     */
+    public void selectImage(final ImageWrapper wraper) {
         Display.getCurrent().asyncExec(new Runnable() {
             @Override
             public void run() {
-                try{
-                    Collections.swap(ImageCanvas.this.getWrapers(), ImageCanvas.this.getWrapers().indexOf(wraper),ImageCanvas.this.getWrapers().size()-1);
-
-                }catch (ArrayIndexOutOfBoundsException e) {
+                try {
+                    Collections.swap(ImageCanvas.this.getWrappers(), ImageCanvas.this.getWrappers().indexOf(wraper), ImageCanvas.this.getWrappers().size() - 1);
+                } catch (ArrayIndexOutOfBoundsException e) {
                     //do nothing
                 }
                 ImageCanvas.this.redraw();
@@ -119,6 +164,9 @@ public class ImageCanvas extends Canvas implements Listener {
         });
     }
 
+    /**
+     * Not implemented.
+     */
     public void deselectImage(ImageWrapper imageWrapper) {
         Display.getCurrent().asyncExec(new Runnable() {
             @Override
@@ -126,13 +174,13 @@ public class ImageCanvas extends Canvas implements Listener {
                 //do nothing
             }
         });
-
     }
 
-    final int[] diffX = new int[1];
-    final int[] diffY = new int[1];
-
-
+    /**
+     * Handle mouse events for select and move images.
+     *
+     * @param event - mouse event.
+     */
     @Override
     public void handleEvent(Event event) {
 
@@ -145,7 +193,7 @@ public class ImageCanvas extends Canvas implements Listener {
                 diffX[0] = 0;
                 diffY[0] = 0;
 
-                final ListIterator<ImageWrapper> iterator = getWrapers().listIterator(getWrapers().size());
+                final ListIterator<ImageWrapper> iterator = getWrappers().listIterator(getWrappers().size());
                 while (iterator.hasPrevious()) {
                     final ImageWrapper wraper = iterator.previous();
 
@@ -157,23 +205,34 @@ public class ImageCanvas extends Canvas implements Listener {
 
                         if (!selected) {
 
+                            //calculete difference between image coordinates
+                            //and position of mouse cursor (event) on destination image
+                            diffX[0] = event.x - wraper.getX();
+                            diffY[0] = event.y - wraper.getY();
+
                             //set image as selected
                             wraper.setSelected(true);
                             selected = true;
 
                             //swap select image to end of list
-                            Collections.swap(wrapers, wrapers.indexOf(wraper),wrapers.size()-1);
+                            Collections.swap(wrappers, wrappers.indexOf(wraper), wrappers.size() - 1);
 
-                            //send callback about 'select' event
-                            if (this.callback!=null)this.callback.onCanvasSelected(wraper);
-                        }else {
+                            //notify listeners about 'select' event
+                            for (OnCanvasImageListener callback : this.listeners) {
+                                if (callback != null) callback.onCanvasSelected(wraper);
+                            }
+                        } else {
+
+                            //select image of not selected
                             wraper.setSelected(false);
                             selected = false;
-                            if (this.callback!=null)this.callback.onCanvasDeselect(wraper);
+
+                            //notify listeners about 'deselect' event
+                            for (OnCanvasImageListener callback : this.listeners) {
+                                if (callback != null) callback.onCanvasDeselect(wraper);
+                            }
                         }
 
-                        diffX[0] = event.x - wraper.getX();
-                        diffY[0] = event.y - wraper.getY();
                         return;
                     }
 
@@ -184,7 +243,7 @@ public class ImageCanvas extends Canvas implements Listener {
             case SWT.MouseMove:
 
                 if (selected) {
-                    final ListIterator<ImageWrapper> listIterator = getWrapers().listIterator(getWrapers().size());
+                    final ListIterator<ImageWrapper> listIterator = getWrappers().listIterator(getWrappers().size());
 
                     //choose selected image
                     while (listIterator.hasPrevious()) {
@@ -206,13 +265,17 @@ public class ImageCanvas extends Canvas implements Listener {
             case SWT.MouseUp:
 
                 selected = false;
-                for (ImageWrapper wraper : getWrapers()) {
+                for (ImageWrapper wraper : getWrappers()) {
                     if (wraper.isSelected()) {
                         wraper.setSelected(false);
-                        wraper.setX(event.x);
-                        wraper.setY(event.y);
+                        wraper.setX(event.x - diffX[0]);
+                        wraper.setY(event.y - diffY[0]);
                         ImageCanvas.this.redraw();
-                        if (this.callback!=null)this.callback.onCanvasDeselect(wraper);
+
+                        //notify listeners about 'deselect' event
+                        for (OnCanvasImageListener callback : this.listeners) {
+                            if (callback != null) callback.onCanvasDeselect(wraper);
+                        }
                     }
                 }
                 break;
@@ -220,13 +283,17 @@ public class ImageCanvas extends Canvas implements Listener {
             case SWT.MouseExit:
 
                 selected = false;
-                for (ImageWrapper wraper : getWrapers()) {
+                for (ImageWrapper wraper : getWrappers()) {
                     if (wraper.isSelected()) {
                         wraper.setSelected(false);
-                        wraper.setX(event.x);
-                        wraper.setY(event.y);
+                        wraper.setX(event.x - diffX[0]);
+                        wraper.setY(event.y - diffY[0]);
                         ImageCanvas.this.redraw();
-                        if (this.callback!=null)this.callback.onCanvasDeselect(wraper);
+
+                        //notify listeners about 'deselect' event
+                        for (OnCanvasImageListener callback : this.listeners) {
+                            if (callback != null) callback.onCanvasDeselect(wraper);
+                        }
                     }
                 }
                 break;
