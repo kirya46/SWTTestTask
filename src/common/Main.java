@@ -1,22 +1,18 @@
 package common;
 
 import common.util.ImageUtil;
-import common.util.ImageWraper;
-import common.util.Log;
+import common.util.ImageWrapper;
+import common.widgets.ImageCanvas;
 import common.widgets.ImageTable;
-import common.widgets.MyCanvas;
+
 import common.widgets.SelectButton;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
-import javax.activation.MimetypesFileTypeMap;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
@@ -31,7 +27,7 @@ public class Main {
 
         final Display display = new Display();
 
-            /* Overall, keep track of the Widget the mouse is moving over */
+        /* Overall, keep track of the Widget the mouse is moving over */
         display.addFilter(SWT.MouseMove, new Listener() {
             @Override
             public void handleEvent(Event e) {
@@ -47,7 +43,7 @@ public class Main {
 
 
         // Add canvas to shell
-        final MyCanvas canvas = new MyCanvas(shell, SWT.NONE);
+        final ImageCanvas canvas = new ImageCanvas(shell, SWT.NONE);
         canvas.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
         canvas.setBackground(display.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW));
 
@@ -64,9 +60,32 @@ public class Main {
         final ImageTable table = new ImageTable(rightComp, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION,
                 new ImageTable.OnItemListener() {
                     @Override
-                    public void onImageRemoved(ImageWraper imageWraper) {
-                        Log.d(TAG,"onImageRemoved");
-                        canvas.removeImage(imageWraper);
+                    public void onImageRemoved(ImageWrapper imageWrapper) {
+                        canvas.removeImage(imageWrapper);
+                    }
+
+                    @Override
+                    public void onItemSelected(ImageWrapper imageWrapper) {
+                        canvas.selectImage(imageWrapper);
+                    }
+
+                    @Override
+                    public void onItemDeselect(ImageWrapper imageWrapper) {
+                        canvas.deselectImage(imageWrapper);
+                    }
+                });
+
+        //add image select listener to canvas
+        canvas.addCanvasImageListener(
+                new ImageCanvas.OnCanvasImageListener() {
+                    @Override
+                    public void onCanvasSelected(ImageWrapper wrapper) {
+                        table.select(wrapper);
+                    }
+
+                    @Override
+                    public void onCanvasDeselect(ImageWrapper wrapper) {
+                        table.deselect(wrapper);
                     }
                 });
 
@@ -85,7 +104,6 @@ public class Main {
                         for (File file : imageFiles) {
 
                             final String name = file.getName();
-                            Log.err(name);
 
                             //get source image
                             Image sourceImage = new Image(display, file.getPath());
@@ -95,17 +113,17 @@ public class Main {
 
                             //resize source image for Canvas
                             sourceImage = new Image(display, file.getPath());
-                            Image canvasImage = ImageUtil.ImageScale(sourceImage, MyCanvas.DEFAULT_IMAGE_WIDTH, MyCanvas.DEFAULT_IMAGE_HEIGHT);
+                            Image canvasImage = ImageUtil.scale(sourceImage, ImageCanvas.DEFAULT_IMAGE_WIDTH, ImageCanvas.DEFAULT_IMAGE_HEIGHT);
 
                             //generate random coordinates
                             Rectangle rectangle = canvas.getBounds();
                             int randomX = new Random().nextInt(rectangle.width);
                             int randomY = new Random().nextInt(rectangle.height);
 
-                            ImageWraper wraper = new ImageWraper(canvasImage, preview, randomX, randomY, name, file.getPath());
+                            ImageWrapper wraper = new ImageWrapper(canvasImage, preview, randomX, randomY, name, file.getPath());
 
                             table.addImage(wraper);
-                            canvas.redrawWithNewImage(wraper);
+                            canvas.addImage(wraper);
                         }
                     }
 
@@ -119,7 +137,6 @@ public class Main {
                         dialog.setText("Warning");
                         dialog.setMessage("Some files were not added.");
 
-
                         // open dialog and await user selection
                         int returnCode = dialog.open();
                     }
@@ -132,8 +149,6 @@ public class Main {
         button.setLayoutData(buttonData);
         button.setText("Choose image");
         button.pack();
-
-        //=============================================================================
 
 
         // start shell

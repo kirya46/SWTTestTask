@@ -4,7 +4,7 @@ import org.eclipse.swt.graphics.Image;
 
 import java.util.Random;
 
-public class ImageWraper {
+public class ImageWrapper {
 
 	private int id;
 	private Image image;
@@ -14,7 +14,7 @@ public class ImageWraper {
 	private String fileName;
 	private String filePath;
 
-	public ImageWraper(Image image, Image preview, int x, int y, String fileName, String filePath) {
+	public ImageWrapper(Image image, Image preview, int x, int y, String fileName, String filePath) {
 		this.id = new Random().nextInt(Integer.MAX_VALUE);
 		this.image = image;
 		this.preview = preview;
@@ -86,7 +86,7 @@ public class ImageWraper {
 
 	@Override
 	public String toString() {
-		return "ImageWraper{" +
+		return "ImageWrapper{" +
 				"id=" + id +
 				", image=" + image +
 				", preview=" + preview +
@@ -103,7 +103,7 @@ public class ImageWraper {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		ImageWraper that = (ImageWraper) o;
+		ImageWrapper that = (ImageWrapper) o;
 
 		return id == that.id;
 	}

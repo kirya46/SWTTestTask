@@ -1,7 +1,6 @@
 package common.widgets;
 
-import common.util.ImageWraper;
-import common.util.Log;
+import common.util.ImageWrapper;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.*;
@@ -11,17 +10,19 @@ import java.util.Iterator;
 
 public class ImageTable extends Table {
 	
-	private static final String TAG = ImageTable.class.getCanonicalName();
+	private static final String TAG = ImageTable.class.getSimpleName();
 
 	public static final int DEFAULT_PREVIEW_WIDTH = 32;
 	public static final int DEFAULT_PREVIEW_HEIGHT =32;
 
-	private ArrayList<ImageWraper> wrappers;
+	private ArrayList<ImageWrapper> wrappers;
 
 	private OnItemListener callback;
 
 	public interface OnItemListener{
-		void onImageRemoved(ImageWraper imageWraper);
+		void onImageRemoved(ImageWrapper ImageWrapper);
+		void onItemSelected(ImageWrapper ImageWrapper);
+		void onItemDeselect(ImageWrapper ImageWrapper);
 	}
 
 	@Override
@@ -32,7 +33,7 @@ public class ImageTable extends Table {
 	public ImageTable(Composite parent, int style,OnItemListener itemListener) {
 		super(parent, style);
 
-		this.wrappers = new ArrayList<ImageWraper>();
+		this.wrappers = new ArrayList<ImageWrapper>();
 		this.callback = itemListener;
 
 		this.setLinesVisible(true);
@@ -52,18 +53,18 @@ public class ImageTable extends Table {
 		this.addListener(SWT.DefaultSelection, new Listener() {
 			public void handleEvent(Event e) {
 				TableItem[] selection = ImageTable.this.getSelection();
-				Log.d(TAG,wrappers.size()+"");
+
 				for (TableItem tableItem : selection) {
 
 					//get ImageWrapper id from TableItem
 					int id = (Integer) tableItem.getData("id");
 
-					final ImageWraper imageById = ImageTable.this.getImageById(id);
+					final ImageWrapper imageById = ImageTable.this.getImageById(id);
 					if (ImageTable.this.callback != null && imageById != null){
 						ImageTable.this.callback.onImageRemoved(imageById);
 					}
 
-					//remove ImageWraper from table image list
+					//remove ImageWrapper from table image list
 					ImageTable.this.removeImage(id);
 
 					//remove TableItem
@@ -71,18 +72,65 @@ public class ImageTable extends Table {
 				}
 			}
 		});
+
+		this.addListener(SWT.MouseDown, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				final TableItem[] selection = ImageTable.this.getSelection();
+
+
+				// TODO: 20/08/17 call callback.deselect()
+
+				for (TableItem tableItem : selection) {
+
+					//get ImageWrapper id from TableItem
+					int id = (Integer) tableItem.getData("id");
+
+					final ImageWrapper imageById = ImageTable.this.getImageById(id);
+					if (ImageTable.this.callback != null && imageById != null){
+						ImageTable.this.callback.onItemSelected(imageById);
+					}
+				}
+			}
+		});
 	}
 
-	public void addImage(ImageWraper imageWraper){
+
+    public void select(final ImageWrapper ImageWrapper){
+		Display.getCurrent().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				ImageTable.this.deselectAll();
+				ImageTable.this.select(ImageTable.this.wrappers.indexOf(ImageWrapper));
+			}
+		});
+	}
+
+
+	public void deselect(final ImageWrapper ImageWrapper){
+    	Display.getCurrent().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				ImageTable.this.deselectAll();
+				ImageTable.this.deselect(ImageTable.this.wrappers.indexOf(ImageWrapper));
+
+			}
+		});
+	}
+
+
+
+
+	public void addImage(ImageWrapper ImageWrapper){
 		
 		//add wrapper to table list
-		this.wrappers.add(imageWraper);
+		this.wrappers.add(ImageWrapper);
 
 		// create TabItem for each selected file
 		TableItem item = new TableItem(this, SWT.NONE);
-		item.setData("id",imageWraper.getId());
-		item.setImage(0, imageWraper.getPreview());
-		item.setText(1," "+imageWraper.getFileName());
+		item.setData("id",ImageWrapper.getId());
+		item.setImage(0, ImageWrapper.getPreview());
+		item.setText(1," "+ImageWrapper.getFileName());
 		Font font = new Font(getDisplay(),"Arial", 10, SWT.NORMAL );
 
 
@@ -91,20 +139,19 @@ public class ImageTable extends Table {
 	}
 
 	public void removeImage(long id){
-		final Iterator<ImageWraper> iterator = this.wrappers.iterator();
+		final Iterator<ImageWrapper> iterator = this.wrappers.iterator();
 		while (iterator.hasNext()){
-			ImageWraper wraper = iterator.next();
-			Log.d(TAG, "Compare: " + wraper.getId() +  " / "+ id);
+			ImageWrapper wraper = iterator.next();
 			if (wraper.getId() == id){
 				iterator.remove();
-				Log.d(TAG,"Size agter remove: " +wrappers.size());
 			}
 		}
-
+		
+		this.wrappers.trimToSize();
 	}
 
-	public ImageWraper getImageById(long id){
-		for (ImageWraper wraper : this.wrappers){
+	public ImageWrapper getImageById(long id){
+		for (ImageWrapper wraper : this.wrappers){
 			if (wraper.getId() == id){
 				return wraper;
 			}

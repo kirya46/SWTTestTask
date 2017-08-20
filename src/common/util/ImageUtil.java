@@ -28,7 +28,7 @@ public class ImageUtil {
 		return scaled;
 	}
 
-	public static Image ImageScale(Image image, int width, int height) {
+	public static Image scale(Image image, int width, int height) {
 
 
 		ImageData data = image.getImageData();
