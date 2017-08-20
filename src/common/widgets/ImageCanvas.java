@@ -3,6 +3,7 @@ package common.widgets;
 
 import common.util.ImageUtil;
 import common.util.ImageWrapper;
+import common.util.Log;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
@@ -19,7 +20,7 @@ public class ImageCanvas extends Canvas implements Listener {
     private static final String TAG = ImageCanvas.class.getSimpleName();
 
     /**
-     * Set true when any imagas on canvas is selected.
+     * Set true when any images on canvas is selected.
      */
     private static boolean selected = false;
 
@@ -107,7 +108,12 @@ public class ImageCanvas extends Canvas implements Listener {
         Display.getCurrent().asyncExec(new Runnable() {
             @Override
             public void run() {
-                Collections.swap(ImageCanvas.this.getWrapers(), ImageCanvas.this.getWrapers().indexOf(wraper),ImageCanvas.this.getWrapers().size()-1);
+                try{
+                    Collections.swap(ImageCanvas.this.getWrapers(), ImageCanvas.this.getWrapers().indexOf(wraper),ImageCanvas.this.getWrapers().size()-1);
+
+                }catch (ArrayIndexOutOfBoundsException e) {
+                    //do nothing
+                }
                 ImageCanvas.this.redraw();
             }
         });
@@ -123,6 +129,9 @@ public class ImageCanvas extends Canvas implements Listener {
 
     }
 
+    final int[] diffX = new int[1];
+    final int[] diffY = new int[1];
+
 
     @Override
     public void handleEvent(Event event) {
@@ -132,6 +141,9 @@ public class ImageCanvas extends Canvas implements Listener {
                 break;
 
             case SWT.MouseDown:
+
+                diffX[0] = 0;
+                diffY[0] = 0;
 
                 final ListIterator<ImageWrapper> iterator = getWrapers().listIterator(getWrapers().size());
                 while (iterator.hasPrevious()) {
@@ -159,6 +171,9 @@ public class ImageCanvas extends Canvas implements Listener {
                             selected = false;
                             if (this.callback!=null)this.callback.onCanvasDeselect(wraper);
                         }
+
+                        diffX[0] = event.x - wraper.getX();
+                        diffY[0] = event.y - wraper.getY();
                         return;
                     }
 
@@ -169,13 +184,18 @@ public class ImageCanvas extends Canvas implements Listener {
             case SWT.MouseMove:
 
                 if (selected) {
-
                     final ListIterator<ImageWrapper> listIterator = getWrapers().listIterator(getWrapers().size());
+
+                    //choose selected image
                     while (listIterator.hasPrevious()) {
                         final ImageWrapper wraper = listIterator.previous();
                         if (wraper.isSelected()) {
-                            wraper.setX(event.x);
-                            wraper.setY(event.y);
+
+                            //set new coordinates for selected image
+                            wraper.setX(event.x - diffX[0]);
+                            wraper.setY(event.y - diffY[0]);
+
+                            //redraw canvas
                             ImageCanvas.this.redraw();
                             return;
                         }
